@@ -42,6 +42,18 @@ const moodDeck = [
           "Send a voice note to Future You describing one thing you're proud of today.",
         component: "prompt" as const,
       },
+      {
+        id: "chant",
+        title: "Emoji Chant",
+        duration: "45 s",
+        description: "Tap through hype lines, pick tonight's war cry.",
+        component: "mantra" as const,
+        mantras: [
+          "⚡️ Charge the chaos, exhale electric.",
+          "Glow loud, glow proud, glow now.",
+          "Micro wins, mega bragging rights.",
+        ],
+      },
     ],
   },
   {
@@ -75,6 +87,18 @@ const moodDeck = [
           "Text a friend a random photo from your camera roll with no context.",
         component: "prompt" as const,
       },
+      {
+        id: "playlist",
+        title: "Spark Playlist",
+        duration: "3 songs",
+        description: "Tiny audio jolts to color your focus.",
+        component: "playlist" as const,
+        tracks: [
+          { title: "Bubblegum Bounce", length: "1:12" },
+          { title: "Neon Heartbeat", length: "0:58" },
+          { title: "Pixel Confetti", length: "1:24" },
+        ],
+      },
     ],
   },
   {
@@ -107,6 +131,18 @@ const moodDeck = [
         description: "List 3 textures within arm's reach and describe them out loud.",
         component: "prompt" as const,
       },
+      {
+        id: "soft-mantra",
+        title: "Slow Bloom",
+        duration: "1 min",
+        description: "Cycle gentle mantras until your nervous system unclenches.",
+        component: "mantra" as const,
+        mantras: [
+          "Breathe in cloudlight, breathe out noise.",
+          "Soft is still powerful.",
+          "We do win by resting harder.",
+        ],
+      },
     ],
   },
 ];
@@ -119,7 +155,13 @@ const hypeStripItems = [
   "Built with therapists + vibe artists",
 ];
 
-type ActivityType = "breath" | "smash" | "doodle" | "prompt";
+type ActivityType =
+  | "breath"
+  | "smash"
+  | "doodle"
+  | "prompt"
+  | "mantra"
+  | "playlist";
 
 type Activity = {
   id: string;
@@ -127,6 +169,8 @@ type Activity = {
   duration: string;
   description: string;
   component: ActivityType;
+  mantras?: string[];
+  tracks?: { title: string; length: string }[];
 };
 
 type Mood = (typeof moodDeck)[number];
@@ -137,6 +181,8 @@ export default function Home() {
   const [selectedMood, setSelectedMood] = useState<Mood>(moodDeck[0]);
   const [promptShuffle, setPromptShuffle] = useState(0);
   const [shareStatus, setShareStatus] = useState<ShareStatus>("idle");
+  const activitiesSectionRef = useRef<HTMLDivElement | null>(null);
+  const deckSectionRef = useRef<HTMLDivElement | null>(null);
 
   const promptCopy = useMemo(() => {
     const prompts = [
@@ -154,6 +200,7 @@ export default function Home() {
   const handleMoodSelect = (mood: Mood) => {
     setSelectedMood(mood);
     shufflePrompt();
+    scrollToActivities();
   };
 
   const handleShare = async () => {
@@ -182,6 +229,12 @@ export default function Home() {
     setTimeout(() => setShareStatus("idle"), 2500);
   };
 
+  const scrollToDeck = () =>
+    deckSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  const scrollToActivities = () =>
+    activitiesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+
   return (
     <div className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
       <BackdropGlow />
@@ -205,12 +258,18 @@ export default function Home() {
                 drop the proof straight to socials.
               </p>
               <div className="flex flex-wrap gap-3">
-                <button className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-lime-200">
+                <button
+                  onClick={scrollToDeck}
+                  className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-lime-200"
+                >
                   Launch Instant Reset
                 </button>
-                <button className="rounded-full border border-white/40 px-5 py-2 text-sm text-white/90 transition hover:bg-white/10">
+                <a
+                  href="#demo"
+                  className="rounded-full border border-white/40 px-5 py-2 text-sm text-white/90 transition hover:bg-white/10"
+                >
                   Watch demo · 00:30
-                </button>
+                </a>
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm text-white/80 sm:grid-cols-3">
                 <StatTile label="resets today" value="12k" accent="text-lime-200" />
@@ -228,7 +287,14 @@ export default function Home() {
 
         <HypeStrip items={hypeStripItems} />
 
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <DemoReel />
+
+        <AudioDrop />
+
+        <section
+          ref={deckSectionRef}
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {moodDeck.map((mood) => (
             <button
               key={mood.id}
@@ -265,6 +331,7 @@ export default function Home() {
 
         <AnimatePresence mode="wait">
           <motion.section
+            ref={activitiesSectionRef}
             key={selectedMood.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -316,7 +383,10 @@ export default function Home() {
                 <li>• Confetti powered Color Smash</li>
                 <li>• Privacy-first, zero-signup beta</li>
               </ul>
-              <button className="w-full rounded-full bg-white px-4 py-3 text-sm font-semibold text-slate-900">
+              <button
+                onClick={scrollToActivities}
+                className="w-full rounded-full bg-white px-4 py-3 text-sm font-semibold text-slate-900"
+              >
                 Start 5-Min Ritual
               </button>
             </div>
@@ -347,6 +417,61 @@ function HypeStrip({ items }: { items: string[] }) {
         ))}
       </div>
     </div>
+  );
+}
+
+function DemoReel() {
+  return (
+    <section
+      id="demo"
+      className="rounded-[28px] border border-white/10 bg-white/5 p-5 sm:p-6"
+    >
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="font-mono text-xs uppercase tracking-[0.4em] text-white/60">
+            Demo reel
+          </p>
+          <span className="text-xs text-white/60">00:30</span>
+        </div>
+        <div className="aspect-video overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60">
+          <iframe
+            className="h-full w-full"
+            src="https://www.youtube.com/embed/7NOSDKb0HlU"
+            title="Mood Arcade demo"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+        <p className="text-sm text-white/70">
+          30-second walkthrough showing how the decks, tarot card, and confetti
+          challenges play together. Screen-record straight from here to tease the
+          launch.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function AudioDrop() {
+  return (
+    <section className="grid gap-4 rounded-[28px] border border-white/10 bg-white/5 p-5 sm:grid-cols-[1.2fr_1fr]">
+      <div>
+        <p className="font-mono text-xs uppercase tracking-[0.4em] text-white/60">
+          Embedded audio
+        </p>
+        <h3 className="mt-2 text-2xl font-semibold text-white">Arcade Sound Bath</h3>
+        <p className="mt-2 text-sm text-white/70">
+          Built-in lo-fi loop you can play directly from the site (or capture for
+          stories). Drop it while showcasing your mood tarot.
+        </p>
+      </div>
+      <div className="rounded-2xl border border-white/15 bg-slate-900/60 p-4">
+        <audio className="w-full" controls src="/audio/mood-loop.mp3">
+          Your browser does not support the audio element.
+        </audio>
+        <p className="mt-2 text-xs text-white/60">Track: &ldquo;Mood Loop&rdquo; · 01:43</p>
+      </div>
+    </section>
   );
 }
 
@@ -441,6 +566,12 @@ function ActivityCard({
         {activity.component === "doodle" && <DoodlePad />}
         {activity.component === "prompt" && (
           <PromptCard prompt={prompt} onShuffle={onShuffle} />
+        )}
+        {activity.component === "mantra" && (
+          <MantraLooper lines={activity.mantras ?? []} />
+        )}
+        {activity.component === "playlist" && (
+          <PlaylistCard tracks={activity.tracks ?? []} />
         )}
       </div>
     </div>
@@ -562,6 +693,7 @@ function ColorSmash() {
 
 function DoodlePad() {
   const [strokes, setStrokes] = useState<string[]>([]);
+  const [expanded, setExpanded] = useState(false);
 
   const handleDraw = (event: MouseEvent<HTMLDivElement>) => {
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -572,10 +704,12 @@ function DoodlePad() {
     setStrokes((prev) => [...prev.slice(-12), squiggle]);
   };
 
+  const canvasHeight = expanded ? "h-60" : "h-40 sm:h-48";
+
   return (
     <div className="flex h-full flex-col gap-3">
       <div
-        className="relative h-40 cursor-crosshair rounded-2xl border border-dashed border-white/20 bg-slate-900/70"
+        className={`relative cursor-crosshair rounded-2xl border border-dashed border-white/20 bg-slate-900/70 ${canvasHeight}`}
         onClick={handleDraw}
       >
         {strokes.length === 0 && (
@@ -596,9 +730,69 @@ function DoodlePad() {
           ))}
         </svg>
       </div>
-      <p className="text-xs text-white/60">
-        Keep tapping to layer colors. Screenshot the chaos and send it to a friend.
-      </p>
+      <div className="flex items-center justify-between text-xs text-white/60">
+        <p>Keep tapping to layer colors.</p>
+        <button
+          onClick={() => setExpanded((prev) => !prev)}
+          className="rounded-full border border-white/20 px-3 py-1 text-[10px] uppercase tracking-[0.3em]"
+        >
+          {expanded ? "Shrink" : "Expand"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MantraLooper({ lines }: { lines: string[] }) {
+  const safeLines = lines.length
+    ? lines
+    : ["Breathe in neon, breathe out static.", "Tiny wins, big feelings."];
+  const [index, setIndex] = useState(0);
+
+  return (
+    <div className="flex h-full flex-col justify-between rounded-2xl border border-white/15 bg-white/5 p-4">
+      <p className="text-lg font-semibold text-white">{safeLines[index]}</p>
+      <button
+        onClick={() => setIndex((prev) => (prev + 1) % safeLines.length)}
+        className="mt-4 self-start rounded-full border border-white/30 px-4 py-1 text-xs uppercase tracking-[0.3em] text-white/80"
+      >
+        Next mantra ↺
+      </button>
+    </div>
+  );
+}
+
+function PlaylistCard({
+  tracks,
+}: {
+  tracks: { title: string; length: string }[];
+}) {
+  const safeTracks =
+    tracks.length > 0
+      ? tracks
+      : [
+          { title: "Lo-fi Sunrise", length: "1:00" },
+          { title: "Pixel Bloom", length: "0:54" },
+        ];
+
+  return (
+    <div className="flex h-full flex-col gap-4 rounded-2xl border border-white/15 bg-slate-900/60 p-4">
+      <div className="space-y-1">
+        <p className="text-xs font-mono uppercase tracking-[0.4em] text-white/50">
+          Mini playlist
+        </p>
+        <p className="text-sm text-white/70">
+          Queue these snips, screenshot, and flex your sound bath.
+        </p>
+      </div>
+      <ul className="space-y-3">
+        {safeTracks.map((track) => (
+          <li key={track.title} className="flex items-center justify-between text-sm">
+            <span className="text-white/80">{track.title}</span>
+            <span className="text-white/50">{track.length}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

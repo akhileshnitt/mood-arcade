@@ -27,3 +27,45 @@ body {
   background: #ff54b820;
   color: #fefefe;
 }
+
+@keyframes marquee-flow {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  width: fit-content;
+  animation: marquee-flow 22s linear infinite;
+}
+
+@keyframes spark-pop {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-40px) scale(1.4);
+    opacity: 0;
+  }
+}
+
+.spark-pop {
+  animation: spark-pop 1.1s ease-out forwards;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 24s linear infinite;
+}
